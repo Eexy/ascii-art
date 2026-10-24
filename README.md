@@ -16,7 +16,7 @@ Load the image -> fix Exif rotation (JPEG only) -> Resize based on the width ->
 
 ### 1. Loading the image
 
-Loading the image is without the surprise the first step of the pipeline. It's a two step operation
+Loading the image is without the surprise the first step of the pipeline. It's a two steps operation
 
 - Take the path from the user (we will accept the path as argument of the program)
-- Load the image
+- Load the image in the program
