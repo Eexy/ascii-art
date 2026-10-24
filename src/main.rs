@@ -1,7 +1,10 @@
 use std::{
+    cmp,
     env::{self, Args},
     path::PathBuf,
 };
+
+use image::{DynamicImage, ImageDecoder, ImageReader, imageops::FilterType};
 
 const VALID_FILE_EXTENSION: [&str; 3] = ["jpeg", "jpg", "png"];
 
@@ -27,9 +30,76 @@ fn get_file_path(mut args: Args) -> Result<PathBuf, String> {
     Ok(path)
 }
 
+fn load_image_and_fix_exif(path: PathBuf) -> Result<DynamicImage, String> {
+    let mut decoder = ImageReader::open(path)
+        .map_err(|err| format!("unable to load image: {err}"))?
+        .into_decoder()
+        .map_err(|err| format!("unable to creader decoder {err}"))?;
+
+    let exif_orientation = decoder
+        .orientation()
+        .map_err(|err| format!("unable to extract orientation from image: {err}"))?;
+    let mut image = DynamicImage::from_decoder(decoder)
+        .map_err(|err| format!("unable to create image from decoded: {err}"))?;
+    image.apply_orientation(exif_orientation);
+
+    Ok(image)
+}
+
+const IMAGE_ASCII_WIDTH: u32 = 120;
+const CHAR_ASPECT_RATION: f32 = 0.45;
+
+fn resize_image(image: &DynamicImage) -> DynamicImage {
+    let image_height = image.height();
+    let image_width = image.width();
+    let aspect_ratio = image_height as f32 / image_width as f32;
+
+    let computed_height =
+        (IMAGE_ASCII_WIDTH as f32 * aspect_ratio * CHAR_ASPECT_RATION).round() as u32;
+    let target_height = cmp::max(1, computed_height);
+
+    image.resize(IMAGE_ASCII_WIDTH, target_height, FilterType::Triangle)
+}
+
+const ASCII_CHARS: [char; 69] = [
+    '.', '\'', '`', '^', '"', ',', ':', ';', 'I', 'l', '!', 'i', '>', '<', '~', '+', '_', '-', '?',
+    ']', '[', '}', '{', '1', ')', '(', '|', '\\', '/', 't', 'f', 'j', 'r', 'x', 'n', 'u', 'v', 'c',
+    'z', 'X', 'Y', 'U', 'J', 'C', 'L', 'Q', '0', 'O', 'Z', 'm', 'w', 'q', 'p', 'd', 'b', 'k', 'h',
+    'a', 'o', '*', '#', 'M', 'W', '&', '8', '%', 'B', '@', '$',
+];
+
+fn pixel_to_char(pixel_grayscale_value: u8) -> char {
+    let ratio = pixel_grayscale_value as f32 / 255.0;
+    let idx = (ratio * (ASCII_CHARS.len() as u8 - 1) as f32).round() as usize;
+
+    ASCII_CHARS[idx]
+}
+
+/*
+ * TODO
+ * use map instead of loop
+ * prendre en compte la correction gamma
+ * rajouter dans le readme la suite
+ * separer le projet en different module
+ * corriger les warnings
+ * completer les tache todoist
+ */
 fn main() -> Result<(), String> {
     let path = get_file_path(env::args())?;
     println!("{}", path.display());
+    let image = load_image_and_fix_exif(path)?;
+    let resized_image = resize_image(&image);
+    let grayscaled_image = resized_image.to_luma8();
+    let mut ascii_art = String::new();
+
+    for row in grayscaled_image.rows() {
+        for pixel in row {
+            ascii_art.push(pixel_to_char(pixel.0[0]));
+        }
+        ascii_art.push('\n');
+    }
+
+    println!("{}", ascii_art);
 
     Ok(())
 }
