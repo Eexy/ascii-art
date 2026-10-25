@@ -96,12 +96,6 @@ fn pixel_to_char(pixel_grayscale_value: u8) -> char {
     ASCII_CHARS[idx]
 }
 
-/*
- * TODO
- * separer le projet en different module
- * corriger les warnings
- * completer les tache todoist
- */
 fn main() -> Result<(), String> {
     let path = get_file_path(env::args())?;
     println!("{}", path.display());
@@ -117,7 +111,7 @@ fn main() -> Result<(), String> {
         ascii_art.push('\n');
     }
 
-    println!("{}", ascii_art);
+    println!("{ascii_art}");
 
     Ok(())
 }
