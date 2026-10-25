@@ -94,7 +94,6 @@ fn pixel_to_char(pixel_grayscale_value: u8) -> char {
  */
 fn main() -> Result<(), String> {
     let path = get_file_path(env::args())?;
-    println!("{}", path.display());
     let image = load_image_and_fix_exif(path)?;
     let resized_image = resize_image(&image);
     let grayscaled_image = resized_image.to_luma8();
