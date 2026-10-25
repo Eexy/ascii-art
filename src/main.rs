@@ -61,16 +61,24 @@ fn resize_image(image: &DynamicImage) -> DynamicImage {
     image.resize(IMAGE_ASCII_WIDTH, target_height, FilterType::Triangle)
 }
 
-const ASCII_CHARS: [char; 70] = [
-    ' ', '.', '\'', '`', '^', '"', ',', ':', ';', 'I', 'l', '!', 'i', '>', '<', '~', '+', '_', '-',
-    '?', ']', '[', '}', '{', '1', ')', '(', '|', '\\', '/', 't', 'f', 'j', 'r', 'x', 'n', 'u', 'v',
-    'c', 'z', 'X', 'Y', 'U', 'J', 'C', 'L', 'Q', '0', 'O', 'Z', 'm', 'w', 'q', 'p', 'd', 'b', 'k',
-    'h', 'a', 'o', '*', '#', 'M', 'W', '&', '8', '%', 'B', '@', '$',
+const ASCII_CHARS: [char; 95] = [
+    ' ', '`', '.', '-', '\'', '_', ',', ':', '~', '*', ';', '!', '"', '^', '/', '\\', '+', '=',
+    'r', '>', '<', '|', '7', 'l', '(', ')', '?', 'L', 't', 'i', 'T', 'x', 'Y', 'v', 'c', 'z', 'J',
+    '1', 'j', 's', 'f', '}', '[', ']', '{', 'I', 'u', 'n', 'y', 'F', '#', 'V', 'o', '4', 'C', '2',
+    'k', 'X', 'e', 'h', '3', 'Z', 'a', 'P', 'A', '5', 'w', 'U', 'S', 'K', 'b', 'd', 'E', '6', 'H',
+    'p', 'q', '9', 'G', 'm', '%', 'O', 'D', '8', '0', '&', 'R', 'N', 'g', 'M', 'W', '$', 'B', 'Q',
+    '@',
 ];
 
+const GAMMA_CORRECTION: f32 = 0.5;
+
 fn pixel_to_char(pixel_grayscale_value: u8) -> char {
-    let ratio = pixel_grayscale_value as f32 / 255.0;
-    let idx = (ratio * (ASCII_CHARS.len() as u8 - 1) as f32).round() as usize;
+    // let ratio = pixel_grayscale_value as f32 / 255.0;
+    let gamma_corrected_pixel =
+        ((pixel_grayscale_value as f32 / 255.0).powf(1.0 / GAMMA_CORRECTION) * 255.0).round();
+    // let idx = (ratio * (ASCII_CHARS.len() as u8 - 1) as f32).round() as usize;
+    let idx =
+        ((gamma_corrected_pixel / 255.0) * (ASCII_CHARS.len() as u8 - 1) as f32).round() as usize;
 
     ASCII_CHARS[idx]
 }
