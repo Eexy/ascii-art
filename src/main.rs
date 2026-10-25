@@ -14,7 +14,10 @@ fn get_file_path(mut args: Args) -> Result<PathBuf, String> {
         .next()
         .ok_or_else(|| "You need to provide a path to the image".to_string())?;
 
-    let path = PathBuf::from(raw_path);
+    let current_dir =
+        env::current_dir().map_err(|err| format!("unable to get current directory path: {err}"))?;
+
+    let path = current_dir.join(PathBuf::from(raw_path));
     let is_valid_file_extension = path
         .extension()
         .and_then(|ext| ext.to_str())
@@ -85,9 +88,6 @@ fn pixel_to_char(pixel_grayscale_value: u8) -> char {
 
 /*
  * TODO
- * use map instead of loop
- * prendre en compte la correction gamma
- * rajouter dans le readme la suite
  * separer le projet en different module
  * corriger les warnings
  * completer les tache todoist
