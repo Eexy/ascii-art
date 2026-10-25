@@ -61,11 +61,11 @@ fn resize_image(image: &DynamicImage) -> DynamicImage {
     image.resize(IMAGE_ASCII_WIDTH, target_height, FilterType::Triangle)
 }
 
-const ASCII_CHARS: [char; 69] = [
-    '.', '\'', '`', '^', '"', ',', ':', ';', 'I', 'l', '!', 'i', '>', '<', '~', '+', '_', '-', '?',
-    ']', '[', '}', '{', '1', ')', '(', '|', '\\', '/', 't', 'f', 'j', 'r', 'x', 'n', 'u', 'v', 'c',
-    'z', 'X', 'Y', 'U', 'J', 'C', 'L', 'Q', '0', 'O', 'Z', 'm', 'w', 'q', 'p', 'd', 'b', 'k', 'h',
-    'a', 'o', '*', '#', 'M', 'W', '&', '8', '%', 'B', '@', '$',
+const ASCII_CHARS: [char; 70] = [
+    ' ', '.', '\'', '`', '^', '"', ',', ':', ';', 'I', 'l', '!', 'i', '>', '<', '~', '+', '_', '-',
+    '?', ']', '[', '}', '{', '1', ')', '(', '|', '\\', '/', 't', 'f', 'j', 'r', 'x', 'n', 'u', 'v',
+    'c', 'z', 'X', 'Y', 'U', 'J', 'C', 'L', 'Q', '0', 'O', 'Z', 'm', 'w', 'q', 'p', 'd', 'b', 'k',
+    'h', 'a', 'o', '*', '#', 'M', 'W', '&', '8', '%', 'B', '@', '$',
 ];
 
 fn pixel_to_char(pixel_grayscale_value: u8) -> char {
