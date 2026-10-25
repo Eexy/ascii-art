@@ -50,15 +50,20 @@ fn load_image_and_fix_exif(path: PathBuf) -> Result<DynamicImage, String> {
 }
 
 const IMAGE_ASCII_WIDTH: u32 = 120;
-const CHAR_ASPECT_RATION: f32 = 0.45;
+const CHAR_ASPECT_RATION: f64 = 0.45;
 
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "height is always positive and far below u32:MAX"
+)]
 fn resize_image(image: &DynamicImage) -> DynamicImage {
     let image_height = image.height();
     let image_width = image.width();
-    let aspect_ratio = image_height as f32 / image_width as f32;
+    let aspect_ratio = f64::from(image_height) / f64::from(image_width);
 
     let computed_height =
-        (IMAGE_ASCII_WIDTH as f32 * aspect_ratio * CHAR_ASPECT_RATION).round() as u32;
+        (f64::from(IMAGE_ASCII_WIDTH) * aspect_ratio * CHAR_ASPECT_RATION).round() as u32;
     let target_height = cmp::max(1, computed_height);
 
     image.resize(IMAGE_ASCII_WIDTH, target_height, FilterType::Triangle)
@@ -75,13 +80,18 @@ const ASCII_CHARS: [char; 95] = [
 
 const GAMMA_CORRECTION: f32 = 0.5;
 
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss,
+    reason = "ratio is in [0, 1] and ASCII_CHARS has 95 entries, so idx is in 0..=94"
+)]
 fn pixel_to_char(pixel_grayscale_value: u8) -> char {
     // let ratio = pixel_grayscale_value as f32 / 255.0;
     let gamma_corrected_pixel =
-        ((pixel_grayscale_value as f32 / 255.0).powf(1.0 / GAMMA_CORRECTION) * 255.0).round();
+        ((f32::from(pixel_grayscale_value) / 255.0).powf(1.0 / GAMMA_CORRECTION) * 255.0).round();
     // let idx = (ratio * (ASCII_CHARS.len() as u8 - 1) as f32).round() as usize;
-    let idx =
-        ((gamma_corrected_pixel / 255.0) * (ASCII_CHARS.len() as u8 - 1) as f32).round() as usize;
+    let idx = ((gamma_corrected_pixel / 255.0) * (ASCII_CHARS.len() - 1) as f32).round() as usize;
 
     ASCII_CHARS[idx]
 }
@@ -94,6 +104,7 @@ fn pixel_to_char(pixel_grayscale_value: u8) -> char {
  */
 fn main() -> Result<(), String> {
     let path = get_file_path(env::args())?;
+    println!("{}", path.display());
     let image = load_image_and_fix_exif(path)?;
     let resized_image = resize_image(&image);
     let grayscaled_image = resized_image.to_luma8();
