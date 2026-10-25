@@ -11,7 +11,7 @@ ASCII Art is a way of recreating images with ascii characters
 An ASCII Art program follow a specific pipeline
 
 ```
-Load the image -> fix Exif rotation (JPEG only) -> Resize based on the width -> Grayscale
+Load the image -> fix Exif rotation (JPEG only) -> Resize based on the width -> Grayscale -> Map pixel to char -> Render
 ```
 
 ### 1. Loading the image
@@ -71,4 +71,31 @@ Where `R` `G` and `B` are the value of of red, green and blue of each pixel
 
 This formula is called the **perceptual luminance**. We can see that before each value there is a different weight. This is because the human eye is more sensitive to green that red or blue
 
-In our case we will directly use the `grayscale` method provided by the `image` crate
+In our case we will directly use the `luma8` method provided by the `image` crate
+
+### 5. Map pixel to char
+
+Once we get have associated each pixel to its grayscale value we can transpose it to an ASCII char to render it
+
+Before rendering it we need to define a `palette`. The palette is a collection of char that will be use to render the luminosity of each pixel. Bigger is the palette the more we can represent different level of luminosity 
+and go into details
+
+We will use this palette
+
+```
+palette = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/|()1{}[]?-_+~<>i!lI;:,"^'.  " 
+```
+
+Once we have defined the palette we also need to define the order to handle light / dark theme
+
+In a light mode bigger character represent  pixels that have the lest luminosity while in dark mode it's the opposite. This is due to the fact that each character represent the "ink" of the the pixel.
+So in light mode the ink is dark because we have white background so we need more ink and in dark mode it's the opposite
+
+Now that we have the palette we need to map our grayscale value to a specific character to do that we get take the grayscale value divided by 255 and multiply by the length of our palette to get the associated character index
+
+The division by 255 nomalize the pixel value that is between [0, 255] into a ratio which is between [0, 1]. The more the ratio is close to 1 the more the pixel is bright
+
+
+### 6. Render
+
+Now that we have associated each pixel to a char we can simply render it. For a simple render in the terminal we just need to store each pixel into a string and render the string at the end
