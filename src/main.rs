@@ -87,10 +87,8 @@ const GAMMA_CORRECTION: f32 = 0.5;
     reason = "ratio is in [0, 1] and ASCII_CHARS has 95 entries, so idx is in 0..=94"
 )]
 fn pixel_to_char(pixel_grayscale_value: u8) -> char {
-    // let ratio = pixel_grayscale_value as f32 / 255.0;
     let gamma_corrected_pixel =
         ((f32::from(pixel_grayscale_value) / 255.0).powf(1.0 / GAMMA_CORRECTION) * 255.0).round();
-    // let idx = (ratio * (ASCII_CHARS.len() as u8 - 1) as f32).round() as usize;
     let idx = ((gamma_corrected_pixel / 255.0) * (ASCII_CHARS.len() - 1) as f32).round() as usize;
 
     ASCII_CHARS[idx]
