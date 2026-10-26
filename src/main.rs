@@ -1,6 +1,8 @@
 mod config;
+mod renderer;
 
-use crate::config::{Config, PaletteSize};
+use crate::config::{Config, PaletteSize, RendererOutput};
+use crate::renderer::{Renderer, TerminalRenderer, TextRenderer};
 use image::{DynamicImage, ImageDecoder, ImageReader, imageops::FilterType};
 use std::{cmp, env, path::PathBuf};
 
@@ -57,7 +59,7 @@ const GAMMA_CORRECTION: f32 = 0.5;
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
     clippy::cast_precision_loss,
-    reason = "the gamma corrected ratio is in [0, 1], so idx is in 0..palette.len();  palette lengths are tiny, so usize -> f32 is exact"
+    reason = "the gamma corrected ratio is in [0, 1], so idx is in 0..palette.len(); palette lengths are tiny, so usize -> f32 is exact"
 )]
 fn pixel_to_char(pixel_grayscale_value: u8, palette: &[char]) -> char {
     let gamma_corrected_pixel =
@@ -74,6 +76,11 @@ fn main() -> Result<(), String> {
         PaletteSize::Long => ASCII_CHARS_LONG,
         PaletteSize::Short => ASCII_CHARS_SHORT,
     };
+    let renderer: Box<dyn Renderer> = match config.renderer {
+        RendererOutput::Terminal => Box::new(TerminalRenderer),
+        RendererOutput::Text => Box::new(TextRenderer),
+    };
+
     let image = load_image_and_fix_exif(config.image_path)?;
     let resized_image = resize_image(&image);
     let grayscaled_image = resized_image.to_luma8();
@@ -86,7 +93,5 @@ fn main() -> Result<(), String> {
         ascii_art.push('\n');
     }
 
-    println!("{ascii_art}");
-
-    Ok(())
+    renderer.render(&ascii_art)
 }

@@ -19,18 +19,18 @@ impl FromStr for PaletteSize {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-enum Renderer {
+pub enum RendererOutput {
     Terminal,
     Text,
 }
 
-impl FromStr for Renderer {
+impl FromStr for RendererOutput {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "terminal" => Ok(Renderer::Terminal),
-            "text" => Ok(Renderer::Text),
+            "terminal" => Ok(RendererOutput::Terminal),
+            "text" => Ok(RendererOutput::Text),
             _ => Err(format!("unknown renderer {s}, expected: terminal, text")),
         }
     }
@@ -42,7 +42,7 @@ const VALID_FILE_EXTENSION: [&str; 3] = ["jpeg", "jpg", "png"];
 pub struct Config {
     pub image_path: PathBuf,
     pub palette_size: PaletteSize,
-    renderer: Renderer,
+    pub renderer: RendererOutput,
 }
 
 impl Config {
@@ -51,7 +51,7 @@ impl Config {
 
         let mut image_path: Option<PathBuf> = None;
         let mut palette_size = PaletteSize::Long;
-        let mut renderer = Renderer::Terminal;
+        let mut renderer = RendererOutput::Terminal;
 
         while let Some(arg) = args.next() {
             match arg.as_str() {
@@ -198,7 +198,7 @@ mod tests {
         let expected_config = Config {
             image_path: PathBuf::from("test.png"),
             palette_size: PaletteSize::Short,
-            renderer: Renderer::Text,
+            renderer: RendererOutput::Text,
         };
 
         assert_eq!(Config::parse(args), Ok(expected_config));
@@ -219,7 +219,7 @@ mod tests {
         let expected_config = Config {
             image_path: PathBuf::from("test.png"),
             palette_size: PaletteSize::Short,
-            renderer: Renderer::Text,
+            renderer: RendererOutput::Text,
         };
 
         assert_eq!(Config::parse(args), Ok(expected_config));
@@ -240,7 +240,7 @@ mod tests {
         let expected_config = Config {
             image_path: PathBuf::from("TEST.PNG"),
             palette_size: PaletteSize::Short,
-            renderer: Renderer::Text,
+            renderer: RendererOutput::Text,
         };
 
         assert_eq!(Config::parse(args), Ok(expected_config));
