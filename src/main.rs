@@ -1,6 +1,6 @@
 mod config;
 
-use crate::config::Config;
+use crate::config::{Config, PaletteSize};
 use image::{DynamicImage, ImageDecoder, ImageReader, imageops::FilterType};
 use std::{cmp, env, path::PathBuf};
 
@@ -40,7 +40,7 @@ fn resize_image(image: &DynamicImage) -> DynamicImage {
     image.resize(IMAGE_ASCII_WIDTH, target_height, FilterType::Triangle)
 }
 
-const ASCII_CHARS: [char; 95] = [
+const ASCII_CHARS_LONG: &[char] = &[
     ' ', '`', '.', '-', '\'', '_', ',', ':', '~', '*', ';', '!', '"', '^', '/', '\\', '+', '=',
     'r', '>', '<', '|', '7', 'l', '(', ')', '?', 'L', 't', 'i', 'T', 'x', 'Y', 'v', 'c', 'z', 'J',
     '1', 'j', 's', 'f', '}', '[', ']', '{', 'I', 'u', 'n', 'y', 'F', '#', 'V', 'o', '4', 'C', '2',
@@ -49,24 +49,31 @@ const ASCII_CHARS: [char; 95] = [
     '@',
 ];
 
+const ASCII_CHARS_SHORT: &[char] = &[' ', '.', ':', '-', '=', '+', '*', '#', '%', '@'];
+
 const GAMMA_CORRECTION: f32 = 0.5;
 
 #[expect(
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
     clippy::cast_precision_loss,
-    reason = "ratio is in [0, 1] and ASCII_CHARS has 95 entries, so idx is in 0..=94"
+    reason = "the gamma corrected ratio is in [0, 1], so idx is in 0..palette.len();  palette lengths are tiny, so usize -> f32 is exact"
 )]
-fn pixel_to_char(pixel_grayscale_value: u8) -> char {
+fn pixel_to_char(pixel_grayscale_value: u8, palette: &[char]) -> char {
     let gamma_corrected_pixel =
         ((f32::from(pixel_grayscale_value) / 255.0).powf(1.0 / GAMMA_CORRECTION) * 255.0).round();
-    let idx = ((gamma_corrected_pixel / 255.0) * (ASCII_CHARS.len() - 1) as f32).round() as usize;
 
-    ASCII_CHARS[idx]
+    let idx = ((gamma_corrected_pixel / 255.0) * (palette.len() - 1) as f32).round() as usize;
+
+    palette[idx]
 }
 
 fn main() -> Result<(), String> {
     let config = Config::parse(env::args())?;
+    let palette = match config.palette_size {
+        PaletteSize::Long => ASCII_CHARS_LONG,
+        PaletteSize::Short => ASCII_CHARS_SHORT,
+    };
     let image = load_image_and_fix_exif(config.image_path)?;
     let resized_image = resize_image(&image);
     let grayscaled_image = resized_image.to_luma8();
@@ -74,7 +81,7 @@ fn main() -> Result<(), String> {
 
     for row in grayscaled_image.rows() {
         for pixel in row {
-            ascii_art.push(pixel_to_char(pixel.0[0]));
+            ascii_art.push(pixel_to_char(pixel.0[0], palette));
         }
         ascii_art.push('\n');
     }

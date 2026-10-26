@@ -1,7 +1,7 @@
 use std::{path::PathBuf, str::FromStr};
 
 #[derive(Debug, PartialEq, Eq)]
-enum PaletteSize {
+pub enum PaletteSize {
     Long,
     Short,
 }
@@ -41,7 +41,7 @@ const VALID_FILE_EXTENSION: [&str; 3] = ["jpeg", "jpg", "png"];
 #[derive(Debug, PartialEq, Eq)]
 pub struct Config {
     pub image_path: PathBuf,
-    palette_size: PaletteSize,
+    pub palette_size: PaletteSize,
     renderer: Renderer,
 }
 
