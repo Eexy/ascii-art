@@ -1,37 +1,8 @@
-use std::{
-    cmp,
-    env::{self, Args},
-    path::PathBuf,
-};
+mod config;
 
+use crate::config::Config;
 use image::{DynamicImage, ImageDecoder, ImageReader, imageops::FilterType};
-
-const VALID_FILE_EXTENSION: [&str; 3] = ["jpeg", "jpg", "png"];
-
-fn get_file_path(mut args: Args) -> Result<PathBuf, String> {
-    args.next();
-    let raw_path = args
-        .next()
-        .ok_or_else(|| "You need to provide a path to the image".to_string())?;
-
-    let current_dir =
-        env::current_dir().map_err(|err| format!("unable to get current directory path: {err}"))?;
-
-    let path = current_dir.join(PathBuf::from(raw_path));
-    let is_valid_file_extension = path
-        .extension()
-        .and_then(|ext| ext.to_str())
-        .is_some_and(|ext| VALID_FILE_EXTENSION.contains(&ext.to_lowercase().as_str()));
-
-    if !is_valid_file_extension {
-        return Err(format!(
-            "Invalid file extension. file must be {}",
-            VALID_FILE_EXTENSION.join(", "),
-        ));
-    }
-
-    Ok(path)
-}
+use std::{cmp, env, path::PathBuf};
 
 fn load_image_and_fix_exif(path: PathBuf) -> Result<DynamicImage, String> {
     let mut decoder = ImageReader::open(path)
@@ -95,9 +66,8 @@ fn pixel_to_char(pixel_grayscale_value: u8) -> char {
 }
 
 fn main() -> Result<(), String> {
-    let path = get_file_path(env::args())?;
-    println!("{}", path.display());
-    let image = load_image_and_fix_exif(path)?;
+    let config = Config::parse(env::args())?;
+    let image = load_image_and_fix_exif(config.image_path)?;
     let resized_image = resize_image(&image);
     let grayscaled_image = resized_image.to_luma8();
     let mut ascii_art = String::new();
